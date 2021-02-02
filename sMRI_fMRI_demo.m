@@ -67,6 +67,9 @@ model.factorizations.tensor2.data = imfMRI;
 model.factorizations.tensor2.cpd = {'V1','V2','V3','V4','V5'};
 
 % Optimize
-options.Display=5;
+options.Display = 50;
+options.TolX = 10^-4;
+options.TolFun = 10^-4;
+options.MaxIter = 100;
 [F, output] =  sdf_minf(model, options);
 end
