@@ -30,6 +30,7 @@ end
 function [F, output] = extractFactors(imsMRI, imfMRI)
 % [F, output] = extractFactors(imsMRI, imfMRI)
 % Extracts coupled and uncoupled factors of structural and functional MRI.
+% Assumed Tensor CP rank is R = 5.
 R = 5;
 sz_s = size(imsMRI);
 sz_f = size(imfMRI);
