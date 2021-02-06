@@ -6,6 +6,8 @@ list_subjects = ls(path);
 list_subjects = list_subjects(3:end,:);
 n_subjects = size(list_subjects,1);
 
+oddball = cell(n_subjects, 3);
+standard = cell(n_subjects, 3);
 F = cell(1,n_subjects);
 output = F;
 for i = 1:n_subjects
@@ -16,15 +18,26 @@ for i = 1:n_subjects
         [256,256,150]);
     imsMRI = cast(I,'single');
     imfMRI = zeros(64,64,32,170,3);
+    n_tot = 0;
     for j=1:3
         I = niftiread([path,'\',list_subjects(i,:),'\func\sub-0',num2str(i),...
             '_task-auditoryoddballwithbuttonresponsetotargetstimuli_run-0',...
             num2str(j),'_bold.nii.gz']);
         imfMRI(:,:,:,:,j) = cast(I,'single');
+        [oddball{i,j}, standard{i,j}] = trial_sep(imfMRI(:,:,:,:,j), path, i, j);
+        for k = 1:size(oddball{i,j},4)
+            % Learn factors for each trial. These factors are trial-specific.
+            % Hence they can be utilized in a CP-STM framework.
+            [oddball_features{i}{n_tot+k}, output{(i-1)*3+j}] = extractFactors(imsMRI, oddball{i,j}(:,:,:,k));
+            % Two classes of trials, oddball and standard. The cell arrays
+            % can be reshaped into a tensor. They are only in cell format
+            % to separate subject-specific data which currently have no
+            % use.
+            [standard_features{i}{n_tot+k}, output{(i-1)*3+j}] = extractFactors(imsMRI, standard{i,j}(:,:,:,k));
+        end
+        n_tot = n_tot+size(oddball{i,j},4);
     end
-    % Learn factors for each subject. These factors are subject-specific.
-    % Hence they can be utilized in a CP-STM framework.
-    [F{i}, output{i}] = extractFactors(imsMRI, imfMRI);
+    
 end
 
 function [F, output] = extractFactors(imsMRI, imfMRI)
@@ -40,8 +53,6 @@ model = struct;
 model.variables.u1 = randn(sz_s(1),R);
 model.variables.u2 = randn(sz_s(2),R);
 model.variables.u3 = randn(sz_s(3),R);
-model.variables.v1 = randn(sz_f(4),R);
-model.variables.v2 = randn(sz_f(5),R);
 
 % Define subsampling matrices
 r_horizontal = ceil(sz_s(1)/sz_f(1));
@@ -57,20 +68,19 @@ model.factors.U3 = 'u3';
 model.factors.V1 = {'u1', @(z, task) struct_matvec(z,task,avM')};
 model.factors.V2 = {'u2', @(z, task) struct_matvec(z,task,avM')};
 model.factors.V3 = {'u3', @(z, task) struct_matvec(z,task,avH')};
-model.factors.V4 = 'v1';
-model.factors.V5 = 'v2';
 
 % Define tensors and their factors to be learned.
 model.factorizations.tensor1.data = imsMRI;
 model.factorizations.tensor1.cpd = {'U1','U2','U3'};
 
 model.factorizations.tensor2.data = imfMRI;
-model.factorizations.tensor2.cpd = {'V1','V2','V3','V4','V5'};
+model.factorizations.tensor2.cpd = {'V1','V2','V3'};
 
 % Optimize
 options.Display = 50;
-options.TolX = 10^-4;
-options.TolFun = 10^-4;
+options.TolX = 10^-6;
+options.TolFun = 10^-6;
 options.MaxIter = 100;
 [F, output] =  sdf_minf(model, options);
+
 end
