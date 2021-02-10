@@ -8,7 +8,7 @@ trial_types = unique(task.trial_type,'rows');
 id_oddball = find(prod(task.trial_type==trial_types(1,:),2));
 id_oddball = unique(id_oddball);
 n_oddball = length(id_oddball);
-oddball_task_ids = zeros(n_oddball,2,'uint16');
+oddball_task_ids = zeros(n_oddball,2);
 
 oddball = zeros(64,64,32,n_oddball);
 last_oddball = 0;
@@ -18,20 +18,20 @@ for k=1:n_oddball
         str2double(task.onset(id_oddball(k)+2,:)),...
         str2double(task.onset(id_oddball(k)+3,:))];
     if contains(task.trial_type(id_oddball(k)+1,:), 'behavioral')
-        oddball_task_ids(k,:) = uint16(floor([onsets(1), onsets(3)-1]));
+        oddball_task_ids(k,:) = (floor([onsets(1), onsets(3)-1]));
     elseif contains(task.trial_type(id_oddball(k)+1,:), 'nan', 'IgnoreCase', true)
         if contains(task.trial_type(id_oddball(k)+2,:), 'behavioral')
-            oddball_task_ids(k,:) = uint16(floor([onsets(1), onsets(4)-1]));
+            oddball_task_ids(k,:) = (floor([onsets(1), onsets(4)-1]));
         end
     else
-        oddball_task_ids(k,:) = uint16(floor([onsets(1), onsets(2)-1]));
+        oddball_task_ids(k,:) = (floor([onsets(1), onsets(2)-1]));
     end
-    curr_oddball = round(oddball_task_ids(k,1)/2)+mod(oddball_task_ids(k,1),2);
+    curr_oddball = floor(oddball_task_ids(k,1)/2)+mod(oddball_task_ids(k,1),2);
     if curr_oddball == last_oddball
         curr_oddball = curr_oddball+1;
     end
     last_oddball = curr_oddball;
-    oddball_task_ids(k,2) = round(oddball_task_ids(k,2)-oddball_task_ids(k,1)/2)+curr_oddball;
+    oddball_task_ids(k,2) = round((oddball_task_ids(k,2)-oddball_task_ids(k,1))/2)+curr_oddball;
     oddball_task_ids(k,1) = curr_oddball;
     oddball(:,:,:,k) = imfMRI(:,:,:,curr_oddball);
 end
@@ -44,7 +44,7 @@ end
 
 % Reduce the trial number so that the experiments are faster.
 
-standard = standard(:,:,:,1:max(5,n_oddball));
-oddball = oddball(:,:,:,1:max(5,n_oddball));
+standard = standard(:,:,:,1:min(5,n_oddball));
+oddball = oddball(:,:,:,1:min(5,n_oddball));
 
 end
