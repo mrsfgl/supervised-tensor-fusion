@@ -1,0 +1,59 @@
+%-----------------------------------------------------------------------
+% Job saved on 09-Mar-2021 14:16:25 by cfg_util (rev $Rev: 7345 $)
+% spm SPM - SPM12 (7771)
+% cfg_basicio BasicIO - Unknown
+%-----------------------------------------------------------------------
+matlabbatch{1}.spm.meeg.convert.dataset = '<UNDEFINED>';
+matlabbatch{1}.spm.meeg.convert.mode.continuous.readall = 1;
+matlabbatch{1}.spm.meeg.convert.channels{1}.type = 'EEG';
+matlabbatch{1}.spm.meeg.convert.channels{2}.type = 'MEG';
+matlabbatch{1}.spm.meeg.convert.channels{3}.type = 'MEGPLANAR';
+matlabbatch{1}.spm.meeg.convert.channels{4}.chan = 'STI101';
+matlabbatch{1}.spm.meeg.convert.outfile = 'spmeeg_';
+matlabbatch{1}.spm.meeg.convert.eventpadding = 0;
+matlabbatch{1}.spm.meeg.convert.blocksize = 3276800;
+matlabbatch{1}.spm.meeg.convert.checkboundary = 1;
+matlabbatch{1}.spm.meeg.convert.saveorigheader = 0;
+matlabbatch{1}.spm.meeg.convert.inputformat = 'autodetect';
+matlabbatch{2}.spm.meeg.preproc.prepare.D(1) = cfg_dep('Conversion: Converted Datafile', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','Dfname'));
+matlabbatch{2}.spm.meeg.preproc.prepare.task{1}.bidschantype = '<UNDEFINED>';
+matlabbatch{3}.spm.meeg.preproc.prepare.D(1) = cfg_dep('Prepare: Prepared Datafile', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','Dfname'));
+matlabbatch{3}.spm.meeg.preproc.prepare.task{1}.bidschanstatus = '<UNDEFINED>';
+matlabbatch{4}.spm.meeg.preproc.prepare.D(1) = cfg_dep('Prepare: Prepared Datafile', substruct('.','val', '{}',{3}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','Dfname'));
+matlabbatch{4}.spm.meeg.preproc.prepare.task{1}.bidsevents.eventfile = '<UNDEFINED>';
+matlabbatch{4}.spm.meeg.preproc.prepare.task{1}.bidsevents.replace = 1;
+matlabbatch{5}.spm.meeg.preproc.downsample.D(1) = cfg_dep('Prepare: Prepared Datafile', substruct('.','val', '{}',{4}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','Dfname'));
+matlabbatch{5}.spm.meeg.preproc.downsample.fsample_new = 200;
+matlabbatch{5}.spm.meeg.preproc.downsample.method = 'resample';
+matlabbatch{5}.spm.meeg.preproc.downsample.prefix = 'd';
+matlabbatch{6}.spm.meeg.preproc.filter.D(1) = cfg_dep('Downsampling: Downsampled Datafile', substruct('.','val', '{}',{5}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','Dfname'));
+matlabbatch{6}.spm.meeg.preproc.filter.type = 'butterworth';
+matlabbatch{6}.spm.meeg.preproc.filter.band = 'high';
+matlabbatch{6}.spm.meeg.preproc.filter.freq = 1;
+matlabbatch{6}.spm.meeg.preproc.filter.dir = 'twopass';
+matlabbatch{6}.spm.meeg.preproc.filter.order = 5;
+matlabbatch{6}.spm.meeg.preproc.filter.prefix = 'hf_';
+matlabbatch{7}.spm.meeg.preproc.filter.D(1) = cfg_dep('Filter: Filtered Datafile', substruct('.','val', '{}',{6}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','Dfname'));
+matlabbatch{7}.spm.meeg.preproc.filter.type = 'butterworth';
+matlabbatch{7}.spm.meeg.preproc.filter.band = 'low';
+matlabbatch{7}.spm.meeg.preproc.filter.freq = 40;
+matlabbatch{7}.spm.meeg.preproc.filter.dir = 'twopass';
+matlabbatch{7}.spm.meeg.preproc.filter.order = 5;
+matlabbatch{7}.spm.meeg.preproc.filter.prefix = 'lf_';
+matlabbatch{8}.spm.meeg.preproc.epoch.D(1) = cfg_dep('Filter: Filtered Datafile', substruct('.','val', '{}',{7}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','Dfname'));
+matlabbatch{8}.spm.meeg.preproc.epoch.trialchoice.define.timewin = [-100 500];
+matlabbatch{8}.spm.meeg.preproc.epoch.trialchoice.define.trialdef(1).conditionlabel = 'Famous';
+matlabbatch{8}.spm.meeg.preproc.epoch.trialchoice.define.trialdef(1).eventtype = 'BIDS';
+matlabbatch{8}.spm.meeg.preproc.epoch.trialchoice.define.trialdef(1).eventvalue = 'Famous';
+matlabbatch{8}.spm.meeg.preproc.epoch.trialchoice.define.trialdef(1).trlshift = 0;
+matlabbatch{8}.spm.meeg.preproc.epoch.trialchoice.define.trialdef(2).conditionlabel = 'Unfamiliar';
+matlabbatch{8}.spm.meeg.preproc.epoch.trialchoice.define.trialdef(2).eventtype = 'BIDS';
+matlabbatch{8}.spm.meeg.preproc.epoch.trialchoice.define.trialdef(2).eventvalue = 'Unfamiliar';
+matlabbatch{8}.spm.meeg.preproc.epoch.trialchoice.define.trialdef(2).trlshift = 0;
+matlabbatch{8}.spm.meeg.preproc.epoch.trialchoice.define.trialdef(3).conditionlabel = 'Scrambled';
+matlabbatch{8}.spm.meeg.preproc.epoch.trialchoice.define.trialdef(3).eventtype = 'BIDS';
+matlabbatch{8}.spm.meeg.preproc.epoch.trialchoice.define.trialdef(3).eventvalue = 'Scrambled';
+matlabbatch{8}.spm.meeg.preproc.epoch.trialchoice.define.trialdef(3).trlshift = 0;
+matlabbatch{8}.spm.meeg.preproc.epoch.bc = 0;
+matlabbatch{8}.spm.meeg.preproc.epoch.eventpadding = 0;
+matlabbatch{8}.spm.meeg.preproc.epoch.prefix = 'Epoched_';
