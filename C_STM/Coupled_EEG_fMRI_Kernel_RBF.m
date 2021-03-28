@@ -30,6 +30,6 @@ function [val] = Coupled_EEG_fMRI_Kernel_RBF(Tx1, Tx2, gammaU, gammaC, gammaV)
         T2_V = cell(modeV);
         T2_V{1} = Tx2.v1;
         
-        val = TensorKernel_RBF(T1_U, T2_U, gammaU) + TensorKernel_RBF(T1_C, T2_C, gammaC) + TensorKernel_RBF(T1_V, T2_V, gammaV);
+        val = 0.33 * TensorKernel_RBF(T1_U, T2_U, gammaU) + 0.5 * TensorKernel_RBF(T1_C, T2_C, gammaC) + 0.1 * TensorKernel_RBF(T1_V, T2_V, gammaV);
         
 end

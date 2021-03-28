@@ -5,7 +5,7 @@ function [alpha, b] = Coupled_EEG_fMRI_STM(X, y, C, gammaU, gammaC, gammaV)
     K = zeros(n, n);
     for i = 1 : n
        for j = i : n
-          K(i, j) = Coupled_EEG_fMRI_Kernel(X{i}, X{j}, gammaU, gammaC, gammaV);
+          K(i, j) = Coupled_EEG_fMRI_Kernel_RBF(X{i}, X{j}, gammaU, gammaC, gammaV);
           K(j, i) = K(i, j);
        end
     end

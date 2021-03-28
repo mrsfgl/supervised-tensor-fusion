@@ -32,6 +32,9 @@ for i = 1 : n
         alpha(i) = 0;
     end
 end
-b_idx = randsample(sv_idx, 1);
-b = y(b_idx) - (alpha.* y)' * K(:, b_idx);
+b = 0;
+for b_idx = 1 : length(sv_idx)
+    b = b + y(b_idx) - (alpha'.* y) * K(:, b_idx);
+end
+b = b / length(sv_idx);
 end
