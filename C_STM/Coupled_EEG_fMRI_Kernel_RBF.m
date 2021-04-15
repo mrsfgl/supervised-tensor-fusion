@@ -11,25 +11,42 @@ function [val] = Coupled_EEG_fMRI_Kernel_RBF(Tx1, Tx2, gammaU, gammaC, gammaV)
         modeC = length(gammaC);
         modeV = length(gammaV);
 
-        T1_U = cell(modeU);
-        T1_U{1} = Tx1.u1;
-        T1_U{2} = Tx1.u2;
-        
-        T2_U = cell(modeU);
-        T2_U{1} = Tx2.u1;
-        T2_U{2} = Tx2.u2;
-        
-        T1_C = cell(modeC);
-        T1_C{1} = Tx1.u3;
-        T2_C = cell(modeC);
-        T2_C{1} = Tx2.u3;
-        
-        T1_V = cell(modeV);
-        T1_V{1} = Tx1.v1;
-        
-        T2_V = cell(modeV);
-        T2_V{1} = Tx2.v1;
-        
-        val = 0.33 * TensorKernel_RBF(T1_U, T2_U, gammaU) + 0.5 * TensorKernel_RBF(T1_C, T2_C, gammaC) + 0.1 * TensorKernel_RBF(T1_V, T2_V, gammaV);
-        
+        if isfield(Tx1, 'u1')
+            T1_U = cell(modeU);
+            T1_U{1} = Tx1.u1;
+            T1_U{2} = Tx1.u2;
+
+            T2_U = cell(modeU);
+            T2_U{1} = Tx2.u1;
+            T2_U{2} = Tx2.u2;
+
+            T1_C = cell(modeC);
+            T1_C{1} = Tx1.u3;
+            T2_C = cell(modeC);
+            T2_C{1} = Tx2.u3;
+
+            T1_V = cell(modeV);
+            T1_V{1} = Tx1.v1;
+
+            T2_V = cell(modeV);
+            T2_V{1} = Tx2.v1;
+
+            val = 0.33 * TensorKernel_RBF(T1_U, T2_U, gammaU) +...
+                0.5 * TensorKernel_RBF(T1_C, T2_C, gammaC) + ...
+                0.1 * TensorKernel_RBF(T1_V, T2_V, gammaV);
+        else
+            if iscell(Tx1)
+                val = 0.33 * TensorKernel_RBF(Tx1{1}.U(1:2), Tx2{1}.U(1:2), gammaU) +...
+                    0.5 * TensorKernel_RBF(Tx1{1}.U(3), Tx2{1}.U(3), gammaC) +...
+                    0.1 * TensorKernel_RBF(Tx1{2}.U(2), Tx2{2}.U(2), gammaV);
+            else
+                if length(Tx1.U)==4
+                    val = 0.33 * TensorKernel_RBF(Tx1.U(1:2), Tx2.U(1:2), gammaU) +...
+                        0.5 * TensorKernel_RBF(Tx1.U(3), Tx2.U(3), gammaC) +...
+                        0.1 * TensorKernel_RBF(Tx1.U(2), Tx2.U(2), gammaV);
+                else
+                    val = TensorKernel_RBF(Tx1.U, Tx2.U, [gammaU,gammaC]);
+                end
+            end
+        end
 end

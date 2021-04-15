@@ -36,20 +36,26 @@ function  [X, A] = create_coupled(varargin)
 
 %% Parse inputs
 params = inputParser;
-params.addParamValue('size', [50 30 40 20 10], @isnumeric);
-params.addParamValue('modes', {[1 2 3], [1 4], [1 5]}, @iscell);
-params.addParamValue('noise', 0.1, @(x) x > 0);
-params.addParamValue('lambdas', {[1 1 1], [1 1 1], [1 1 0]}, @iscell);
+params.addParameter('size', [50 30 40 20 10], @isnumeric);
+params.addParameter('modes', {[1 2 3], [1 4], [1 5]}, @iscell);
+params.addParameter('noise', 0.1, @(x) x > 0);
+params.addParameter('lambdas', {[1 1 1], [1 1 1], [1 1 0]}, @iscell);
+params.addParameter('rnd_seed', randi(10^3));
 params.parse(varargin{:});
 sz         = params.Results.size;    %size of data sets
 lambdas    = params.Results.lambdas; % norms of components in each data set
 modes      = params.Results.modes;   % how the data sets are coupled
 nlevel     = params.Results.noise;
+rnd_seed   = params.Results.rnd_seed;
+
 
 max_modeid = max(cellfun(@(x) max(x), modes));
 if max_modeid ~= length(sz)
     error('Mismatch between size and modes inputs')
 end
+
+%% Random seed
+rng(rnd_seed);
 
 %% Generate factor matrices
 nb_modes  = length(sz);

@@ -29,14 +29,6 @@ function [f, X] = admm_loop(Z, X, Znormsqr, alpha, beta, eta, theta)
 %      Structure-Revealing Data Fusion, BMC Bioinformatics, 15: 239, 2014.        
 %
 
-%% Set-up
-if ~isa(Z,'tensor') && ~isa(Z,'sptensor')
-    error('Z must be a tensor or a sptensor');
-end
-
-if ~iscell(X)
-    error('A must be a cell array');
-end
 
 P = length(X);
 %% Initialize variables.

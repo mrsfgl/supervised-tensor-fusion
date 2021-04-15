@@ -84,7 +84,11 @@ for p = 1:P
     for i = 1:length(Z.modes{p})
         j = Z.modes{p}(i);
         id = find(modes==j);
-        curr_m = n_modes(p-1)+i;
+        if p>1
+            curr_m = n_modes(p-1)+i;
+        else
+            curr_m = i;
+        end
         id = setdiff(id, curr_m);
         for k=1:length(id)
             G.fac{curr_m} = G.fac{curr_m} + alpha*A.fac{curr_m};

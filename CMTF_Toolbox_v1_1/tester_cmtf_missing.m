@@ -58,13 +58,17 @@ function  data = tester_cmtf_missing(varargin)
 
 %% Parse inputs
 params = inputParser;
-params.addParamValue('R', 3, @(x) x > 0);
-params.addParamValue('size', [50 30 40 20], @isnumeric);
-params.addParamValue('modes', {[1 2 3], [1 4]}, @iscell);
-params.addParamValue('lambdas', {[1 1 1], [1 1 1]}, @iscell);
-params.addParamValue('flag_sparse',[0 0], @isnumeric);
-params.addParamValue('M',[0.5 0.5], @isnumeric);
-params.addParamValue('init', 'random', @(x) (iscell(x) || ismember(x,{'random','nvecs'})));
+params.addParameter('R', 3, @(x) x > 0);
+params.addParameter('size', [50 30 40 20], @isnumeric);
+params.addParameter('modes', {[1 2 3], [1 4]}, @iscell);
+params.addParameter('lambdas', {[1 1 1], [1 1 1]}, @iscell);
+params.addParameter('flag_sparse',[0 0], @isnumeric);
+params.addParameter('flag_soft',0, @isnumeric);
+params.addParameter('dist_coupled', 0.1, @(x) x >= 0);
+params.addParameter('rnd_seed', randi(10^3));
+params.addParameter('M',[0.5 0.5], @isnumeric);
+params.addParameter('noise',.1, @(x) x>=0 && x<=1);
+params.addParameter('init', 'random', @(x) (iscell(x) || ismember(x,{'random','nvecs'})));
 params.parse(varargin{:});
 
 %% Parameters
@@ -75,6 +79,16 @@ R           = params.Results.R;
 init        = params.Results.init;
 flag_sparse = params.Results.flag_sparse;
 M           = params.Results.M;
+noise       = params.Results.noise;
+flag_soft   = params.Results.flag_soft;
+dist_coupled = params.Results.dist_coupled;
+rnd_seed    = params.Results.rnd_seed;
+
+if length(lambdas{1})~=R
+    for i = 1:length(lambdas)
+        lambdas{i} = ones(1,R);
+    end
+end
 
 %% Check parameters
 if length(lambdas)~=length(modes)
@@ -94,8 +108,16 @@ if length(M)<p
     error('Percentage of missing data should be specified for each data set');
 end
 
+
 %% Form coupled data
-[X, Atrue] = create_coupled('size', sz, 'modes', modes, 'lambdas', lambdas);
+if flag_soft
+    [X, Atrue] = create_soft_coupled('size',sz,'modes',modes,'lambdas',...
+        lambdas,'dist_coupled', dist_coupled,'rnd_seed', rnd_seed, 'noise',...
+        noise);
+else
+    [X, Atrue] = create_coupled('size',sz,'modes',modes,'lambdas',lambdas,...
+        'rnd_seed', rnd_seed, 'noise',noise);
+end
 
 % Set some entries to missing based on the percentage of missing entries, M.
 P = length(X);
@@ -115,11 +137,11 @@ Z.size  = sz;
 
 %% Fit CMTF using one of the first-order optimization algorithms 
 options = ncg('defaults');
-options.Display ='final';
+options.Display ='off';
 options.MaxFuncEvals = 100000;
-options.MaxIters     = 10000;
-options.StopTol      = 1e-8;
-options.RelFuncTol   = 1e-8;
+options.MaxIters     = 500;
+options.StopTol      = 1e-6;
+options.RelFuncTol   = 1e-6;
 
 % fit CMTF-OPT
 [Fac, G,out]  = cmtf_opt(Z,R,'init',init,'alg_options',options); 

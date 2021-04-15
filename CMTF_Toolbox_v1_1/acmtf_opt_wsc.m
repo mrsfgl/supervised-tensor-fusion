@@ -33,11 +33,11 @@ end
 
 %% Set parameters
 params = inputParser;
-params.addParamValue('alg', 'ncg', @(x) ismember(x,{'ncg','tn','lbfgs'}));
-params.addParamValue('beta_cp', 0, @(x) x >= 0);
-params.addParamValue('beta_pca',0, @(x) x >= 0);
-params.addParamValue('alpha',0, @(x) x >= 0);
-params.addParamValue('init', 'random', @(x) (isstruct(x) || ismember(x,{'random','nvecs'})));
+params.addParameter('alg', 'ncg', @(x) ismember(x,{'ncg','tn','lbfgs'}));
+params.addParameter('beta_cp', 0, @(x) x >= 0);
+params.addParameter('beta_pca', 0, @(x) x >= 0);
+params.addParameter('alpha', 1, @(x) x >= 0);
+params.addParameter('init', 'random', @(x) (isstruct(x) || ismember(x,{'random','nvecs'})));
 params.addOptional('alg_options', '', @isstruct);
 params.parse(varargin{:});
 P = numel(Z.object);
@@ -62,6 +62,8 @@ end
 %% Initialization
 sz = Z.size;
 modes = cell2mat(Z.modes);
+n_modes = cellfun(@length, Z.modes);
+n_modes = cumsum(n_modes);
 N = length(modes);
 
 if isstruct(params.Results.init)
@@ -104,8 +106,9 @@ out = feval(fhandle, @(x)acmtf_fun_sc(x,Z,R,Znormsqr, params.Results.beta_cp, pa
 %% Compute factors 
 Temp = acmtf_vec_to_struct_sc(out.X, Z, R);
 Zhat = cell(P,1);
-for p=1:P
-    Zhat{p} = ktensor(Temp.norms{p},Temp.fac(Z.modes{p}));
+Zhat{1} = ktensor(Temp.norms{1},Temp.fac(1:n_modes(1)));
+for p=2:P
+    Zhat{p} = ktensor(Temp.norms{p},Temp.fac((n_modes(p-1)+1):n_modes(p)));
 end
 output = out;
 

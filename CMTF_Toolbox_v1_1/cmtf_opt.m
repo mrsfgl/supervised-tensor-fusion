@@ -56,8 +56,8 @@ end
 
 %% Set parameters
 params = inputParser;
-params.addParamValue('alg', 'ncg', @(x) ismember(x,{'ncg','tn','lbfgs'}));
-params.addParamValue('init', 'random', @(x) (iscell(x) || ismember(x,{'random','nvecs'})));
+params.addParameter('alg', 'ncg', @(x) ismember(x,{'ncg','tn','lbfgs'}));
+params.addParameter('init', 'random', @(x) (iscell(x) || ismember(x,{'random','nvecs'})));
 params.addOptional('alg_options', '', @isstruct);
 params.parse(varargin{:});
 
