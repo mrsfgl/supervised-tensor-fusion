@@ -1,10 +1,12 @@
 
 % ACMTF tests with soft coupling
-ranks = [3:2:7];
-dists = [0.1:0.2:0.9];
-miss_rates = [0.01, 0.01];
+s_coupl = 0;
+sizes = [20,20,20,20];
+ranks = [3];
+dists = [0];
+miss_rates = [0.1, 0.1];
 noise_level = .5;
-n_exps = 10;
+n_exps = 1;
 n_ranks = length(ranks);
 n_dists = length(dists);
 
@@ -18,12 +20,11 @@ err_cp = cell(n_ranks, n_exps);
 err_acmtf = cell(n_dists, n_ranks, n_exps);
 err_acmtf_wsc = cell(n_dists, n_ranks, n_exps);
 err_cmtf = cell(n_dists, n_ranks, n_exps);
-parfor i_e = 1:n_exps
+for i_e = 1:n_exps
     for i_d = 1:n_dists
         for i_r = 1:n_ranks
-
             % Soft coupled data - hard coupled algorithm
-            data = tester_cmtf_missing('R',ranks(i_r),'flag_soft',1,...
+            data = tester_cmtf_missing('size', sizes, 'R',ranks(i_r),'flag_soft',s_coupl,...
                 'dist_coupled',dists(i_d),'rnd_seed', i_e, 'M', miss_rates,...
                 'noise', noise_level);
 
@@ -36,7 +37,7 @@ parfor i_e = 1:n_exps
                 X = tensor(X);
                 P = data.W{1};
                 K = cp_wopt(X,P,ranks(i_r));
-                
+
                 for n=1:3
                     Cmat = corr(K{n},data.Factrue{n});
                     corrs_cp{i_r,i_e}(n) = mean(max(abs(Cmat)));
@@ -45,7 +46,7 @@ parfor i_e = 1:n_exps
                 trueval = data.Xorig{1}(find(data.W{1}==0));
                 estval = K(find(data.W{1}==0));
                 err_cp{i_r,i_e} = norm(estval - trueval)/length(estval);
-                
+
                 Y = zeros(size(data.Xorig{2}));
                 Y(double(data.W{2})~=1) = data.Xorig{2}(find(data.W{2}~=1));
                 [U,S,V] = svds(Y, ranks(i_r));
@@ -56,9 +57,8 @@ parfor i_e = 1:n_exps
                 estval = K(double(data.W{2})==0);
                 err_pca{i_r,i_e} = norm(estval - trueval)/length(estval);
             end
-
             % Soft coupled data - hard coupled algorithm
-            data = tester_acmtf_missing('R',ranks(i_r),'flag_soft',1,...
+            data = tester_acmtf_missing('size', sizes, 'R',ranks(i_r),'flag_soft',s_coupl,...
                 'dist_coupled',dists(i_d), 'rnd_seed', i_e, 'M', miss_rates,...
                 'noise', noise_level);
 
@@ -66,8 +66,9 @@ parfor i_e = 1:n_exps
                 err_analysis_acmtf(data, modes, 1);
 
             % Soft coupled data - soft coupled algorithm
-            data = tester_acmtf_wsc_missing('R',ranks(i_r),'dist_coupled',...
-                dists(i_d),'rnd_seed',i_e, 'M', miss_rates,'noise', noise_level);
+            data = tester_acmtf_wsc_missing('size', sizes, 'R',ranks(i_r),...
+                'dist_coupled', dists(i_d),'rnd_seed',i_e, 'M', miss_rates,...
+                'noise', noise_level, 'flag_soft', s_coupl);
 
             [err_acmtf_wsc{i_d,i_r,i_e}, corrs_acmtf_wsc{i_d,i_r,i_e}] = ...
                 err_analysis_acmtf_wsc(data, modes, 1);

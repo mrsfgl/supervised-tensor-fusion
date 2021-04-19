@@ -36,8 +36,9 @@ options = ncg('defaults');
 options.Display ='off';
 options.MaxFuncEvals = 100000;
 options.MaxIters     = 500;
-options.StopTol      = 1e-5;
-options.RelFuncTol   = 1e-5;
+options.StopTol      = 1e-7;
+options.RelFuncTol   = 1e-7;
+options.TraceFunc    = true;
 
 init = 'random';
 % fit ACMTF-OPT

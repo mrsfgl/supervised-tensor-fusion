@@ -7,6 +7,8 @@ R = size(A{1}{1}{1},2);
 modes = X{1}{1}.modes;
 mds = cell2mat(X{1}{1}.modes);
 P = length(modes);
+beta_cp = .01; beta_pca = .01;
+alpha = 0.0001;
 
 train_orig = cell(1,n_train); test_orig = cell(1,n_test);
 train_cp = cell(1,n_train); test_cp = cell(1,n_test);
@@ -14,13 +16,14 @@ train_pca = cell(1,n_train); test_pca = cell(1,n_test);
 train_cmtf = cell(1,n_train); test_cmtf = cell(1,n_test);
 train_acmtf = cell(1,n_train); test_acmtf = cell(1,n_test);
 train_acmtf_sc = cell(1,n_train); test_acmtf_sc = cell(1,n_test);
-err_orig = zeros(n_samples, P); corr_orig = zeros(n_samples, 4);
+err_orig = zeros(n_samples, P); corr_orig = zeros(n_samples, length(mds)-1);
 err_cp = zeros(n_samples, 1); err_pca = zeros(n_samples, 1);
 err_cmtf = zeros(n_samples, P); err_acmtf = zeros(n_samples, P);
 err_acmtf_sc = zeros(n_samples, P);
-corr_cp = zeros(n_samples, 3); corr_pca = zeros(n_samples, 2);
-corr_cmtf = zeros(n_samples, 4); corr_acmtf = zeros(n_samples, 4);
-corr_acmtf_sc = zeros(n_samples, 5);
+corr_cp = zeros(n_samples, 3); corr_pca = zeros(n_samples, 3);
+corr_cmtf = zeros(n_samples, length(mds)-1); 
+corr_acmtf = zeros(n_samples, length(mds)-1);
+corr_acmtf_sc = zeros(n_samples, length(mds));
 
 K_folds = crossvalind('Kfold', [ones(1,n_samples),-ones(1,n_samples)],K);
 Fcp = cell(1, 2*n_samples);
@@ -28,15 +31,23 @@ Fpca = Fcp; Fcmtf = Fpca; Facmtf = Fcmtf; Facmtf_sc = Facmtf;
 for i=1:n_samples
     %% Extract Factors
     Fcp{i} = cp_wopt(X{1}{i}.object{1}, X{1}{i}.miss{1}, R);
+%     Fcp{i} = cp_opt(X{1}{i}.object{1}, R, 'tol', 10^-7);
     Fpca{i} = cp_wopt(X{1}{i}.object{2}, X{1}{i}.miss{2}, R);
+%     Fpca{i} = cp_opt(X{1}{i}.object{2}, R, 'tol', 10^-7);
     Fcmtf{i} = extract_w_CMTF(X{1}{i}, [], R, 'modes', modes);
-    Facmtf{i} = extract_w_ACMTF(X{1}{i}, [], R, 'modes', modes);
-    Facmtf_sc{i} = extract_wsc_ACMTF(X{1}{i},[], R, 'modes', modes);
+    Facmtf{i} = extract_w_ACMTF(X{1}{i}, [], R, 'modes', modes,'beta_cp',...
+        beta_cp, 'beta_pca', beta_pca);
+    Facmtf_sc{i} = extract_wsc_ACMTF(X{1}{i},[], R, 'modes', modes,'beta_cp',...
+        beta_cp, 'beta_pca', beta_pca, 'alpha', alpha);
     Fcp{i+n_samples} = cp_wopt(X{2}{i}.object{1}, X{2}{i}.miss{1}, R);
     Fpca{i+n_samples} = cp_wopt(X{2}{i}.object{2}, X{2}{i}.miss{2}, R);
+%     Fcp{i+n_samples} = cp_opt(X{2}{i}.object{1}, R, 'tol', 10^-7);
+%     Fpca{i+n_samples} = cp_opt(X{2}{i}.object{2}, R, 'tol', 10^-7);
     Fcmtf{i+n_samples} = extract_w_CMTF(X{2}{i}, [], R, 'modes', modes);
-    Facmtf{i+n_samples} = extract_w_ACMTF(X{2}{i}, [], R, 'modes', modes);
-    Facmtf_sc{i+n_samples} = extract_wsc_ACMTF(X{2}{i}, [], R, 'modes', modes);
+    Facmtf{i+n_samples} = extract_w_ACMTF(X{2}{i}, [], R, 'modes', modes,...
+        'beta_cp', beta_cp, 'beta_pca', beta_pca);
+    Facmtf_sc{i+n_samples} = extract_wsc_ACMTF(X{2}{i}, [], R, 'modes',...
+        modes,'beta_cp', beta_cp, 'beta_pca', beta_pca, 'alpha', alpha);
     
     %% Compute the decomposition quality.
     [err_orig(i,:), corr_orig(i,:)] = ...
@@ -45,26 +56,27 @@ for i=1:n_samples
     corr_orig(i+n_samples,:) = corr_orig(i,:);
     [err_cp(i,:), corr_cp(i,:)] = comp_err_facs(A{1}{i}(1:3), Fcp{i}.U,...
         X{1}{i}.orig(1), {1:3});
-    [err_pca(i,:), corr_pca(i,:)] = comp_err_facs(A{1}{i}([1,4]), Fpca{i}.U,...
-        X{1}{i}.orig(2), {1:2});
-    [err_cmtf(i,:), corr_cmtf(i,:)] = comp_err_facs(A{1}{i}, Fcmtf{i}.U,...
-        X{1}{i}.orig, modes);
-    [err_acmtf(i,:), corr_acmtf(i,:)] = comp_err_facs(A{1}{i},...
-        [Facmtf{i}{1}.U; Facmtf{i}{2}.U(2)], X{1}{i}.orig, modes);
-    [err_acmtf_sc(i,:), corr_acmtf_sc(i,:)] = comp_err_facs(A{1}{i}(mds),...
-        [Facmtf_sc{i}{1}.U; Facmtf_sc{i}{2}.U], X{1}{i}.orig, {[1:3],[4,5]});
     [err_cp(i+n_samples,:), corr_cp(i+n_samples,:)] = ...
         comp_err_facs(A{2}{i}(1:3), Fcp{i+n_samples}.U, X{2}{i}.orig(1), {1:3});
+    [err_pca(i,:), corr_pca(i,:)] = comp_err_facs(A{1}{i}(modes{2}), Fpca{i}.U,...
+        X{1}{i}.orig(2), {1:length(modes{2})});
     [err_pca(i+n_samples,:), corr_pca(i+n_samples,:)] = ...
-        comp_err_facs(A{2}{i}([1,4]), Fpca{i+n_samples}.U, X{2}{i}.orig(2), {1:2});
+        comp_err_facs(A{2}{i}(modes{2}), Fpca{i+n_samples}.U, X{2}{i}.orig(2),...
+        {1:length(modes{2})});
+    [err_cmtf(i,:), corr_cmtf(i,:)] = comp_err_facs(A{1}{i}, Fcmtf{i}.U,...
+        X{1}{i}.orig, modes);
     [err_cmtf(i+n_samples,:), corr_cmtf(i+n_samples,:)] = ...
         comp_err_facs(A{2}{i}, Fcmtf{i+n_samples}.U, X{2}{i}.orig, modes);
+    [err_acmtf(i,:), corr_acmtf(i,:)] = comp_err_facs(A{1}{i},...
+        [Facmtf{i}{1}.U; Facmtf{i}{2}.U(2:length(modes{2}))], X{1}{i}.orig, modes);
     [err_acmtf(i+n_samples,:), corr_acmtf(i+n_samples,:)] = ...
         comp_err_facs(A{2}{i}, [Facmtf{i+n_samples}{1}.U;...
-        Facmtf{i+n_samples}{2}.U(2)], X{2}{i}.orig, modes);
+        Facmtf{i+n_samples}{2}.U(2:length(modes{2}))], X{2}{i}.orig, modes);
+    [err_acmtf_sc(i,:), corr_acmtf_sc(i,:)] = comp_err_facs(A{1}{i}(mds),...
+        [Facmtf_sc{i}{1}.U; Facmtf_sc{i}{2}.U], X{1}{i}.orig, {[1:3],[4:length(mds)]});
     [err_acmtf_sc(i+n_samples,:), corr_acmtf_sc(i+n_samples,:)] = ...
         comp_err_facs(A{2}{i}(mds), [Facmtf_sc{i+n_samples}{1}.U;...
-        Facmtf_sc{i+n_samples}{2}.U], X{2}{i}.orig, {[1:3],[4,5]});
+        Facmtf_sc{i+n_samples}{2}.U], X{2}{i}.orig, {[1:3],[4:length(mds)]});
 end
 
 for i_folds=1:K
@@ -132,8 +144,8 @@ l_tst = length(test);
 y_train = [ones(1,l_tr/2), -ones(1,l_tr/2)];
 y_test = [ones(1,l_tst/2), -ones(1,l_tst/2)];
 
-[alpha, b] = Coupled_EEG_fMRI_STM(train, y_train, 1/l_tr, [0.1, 0.01], [0.5], [0.00001]);
-y_predict = Coupled_EEG_fMRI_STM_Predict(test, train, y_train, alpha, b, [0.1, 0.01], [0.5], [0.00001]);
+[alpha, b] = Coupled_EEG_fMRI_STM(train, y_train, 1/l_tr, [0.1, 0.1], [0.5], 0.1*ones(1,2));
+y_predict = Coupled_EEG_fMRI_STM_Predict(test, train, y_train, alpha, b, [0.1, 0.1], [0.5], 0.1*ones(1,2));
 perf = classperf((y_test == 1), (y_predict == 1));
 res.accuracy = perf.CorrectRate;
 res.precision = perf.PositivePredictiveValue;

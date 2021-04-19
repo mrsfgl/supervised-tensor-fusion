@@ -68,7 +68,7 @@ end
 % errorbar(noise_levels, m_accs(4,:), s_accs(4,:), '--x', 'LineWidth', 2, 'DisplayName', 'ACMTF')
 % errorbar(noise_levels, m_accs(5,:), s_accs(5,:), '--*', 'LineWidth', 2, 'DisplayName', 'ACMTF_sc')
 ax.FontSize = 17;
-xlabel('Class Distances')
+xlabel('Noise Levels (SNR)')
 ylabel('Accuracy')
 legend('CP', 'PCA', 'CMTF', 'ACMTF', 'ACMTF-SC', 'location', 'southeast')
 
@@ -88,7 +88,7 @@ end
 % errorbar(noise_levels, m_precs(5,:), s_precs(5,:), '--*', 'LineWidth', 2, 'DisplayName', 'ACMTF_sc')
 % grid,
 ax.FontSize = 17;
-xlabel('Class Distances')
+xlabel('Noise Levels (SNR)')
 ylabel('Precision')
 legend('CP', 'PCA', 'CMTF', 'ACMTF', 'ACMTF-SC', 'location', 'southeast')
 
@@ -108,7 +108,7 @@ end
 % errorbar(noise_levels, m_recalls(5,:), s_recalls(5,:), '--*', 'LineWidth', 2, 'DisplayName', 'ACMTF_sc')
 % grid,
 ax.FontSize = 17;
-xlabel('Class Distances')
+xlabel('Noise Levels (SNR)')
 ylabel('Recall(Sensitivity)')
 legend('CP', 'PCA', 'CMTF', 'ACMTF', 'ACMTF-SC', 'location', 'southeast')
 
@@ -128,7 +128,7 @@ end
 % errorbar(noise_levels, m_specs(5,:), s_specs(5,:), '--*', 'LineWidth', 2, 'DisplayName', 'ACMTF_sc')
 % grid,
 ax.FontSize = 17;
-xlabel('Class Distances')
+xlabel('Noise Levels (SNR)')
 ylabel('Specificity')
 legend('CP', 'PCA', 'CMTF', 'ACMTF', 'ACMTF-SC', 'location', 'southeast')
 
@@ -149,7 +149,7 @@ end
 % grid,
 ax = gca;
 ax.FontSize = 17;
-xlabel('Class Distances')
+xlabel('Noise Levels (SNR)')
 ylabel('Residual Error')
 legend('CP', 'PCA', 'CMTF', 'ACMTF', 'ACMTF-SC', 'location', 'southeast')
 end
