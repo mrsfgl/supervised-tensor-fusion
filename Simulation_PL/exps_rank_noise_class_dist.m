@@ -10,7 +10,6 @@ class_var = [1];
 
 
 noise_levels = [0]; % dB
-M = [.1,.1];
 % noise_levels = [.1:.2:1];
 ranks = 3;
 class_dists = [0.5, 0, 0, 0.5];
