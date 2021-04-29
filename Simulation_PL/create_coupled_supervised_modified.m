@@ -62,10 +62,10 @@ for c = 1:2
     X{c} = cell(1,n_samples);
     for m = 1:n_samples
         for p = 1:P
-            W = tt_create_missing_data_pattern(sz(modes{p}), M(p), flag_sparse(p));
+            
             temp = full(ktensor(lambdas{p}',A{c}{m}(modes{p})));
             temp = awgn(double(temp), nlevel, 'measured');
-            X{c}{m}{p} = W.*temp;
+            X{c}{m}{p} = temp;
         end
     end
 end
