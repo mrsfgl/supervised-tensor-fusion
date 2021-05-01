@@ -28,7 +28,8 @@ D_data = cell(1, 2 * n);
 for i = 1 : n
    eeg = X{1}{i}{1};
    fMRI = X{1}{i}{2};
-   [g, ~] = extract_w_CMTF(eeg, fMRI, 3);
+%    [g, ~] = extract_w_CMTF(eeg, fMRI, 3);
+   [g, ~] = extract_w_ACMTF(eeg, fMRI, 3);
    D_data{i} = g;
 %     df = double(X{1}{i}{2});
 %     g = cpd(df, 3);
@@ -39,7 +40,8 @@ end
 for j = 1 : n
    eeg = X{2}{j}{1};
    fMRI = X{2}{j}{2};
-   [g, ~] = extract_w_CMTF(eeg, fMRI, 3);
+%    [g, ~] = extract_w_CMTF(eeg, fMRI, 3);
+   [g, ~] = extract_w_ACMTF(eeg, fMRI, 3);
    D_data{j + n} = g;
 %     df = double(X{2}{j}{2});
 %     g = cpd(df, 3);
@@ -62,8 +64,10 @@ for i = 1 : 50
     Xtest = D_data(s.test);
     ytrain = y(s.training);
     ytest = y(s.test);
-    [alpha, b] = CMTF_STM(Xtrain, ytrain, 10, [1, 1], [1], [1], 'QP');
-    ypredict = CMTF_STM_Predict(Xtest, Xtrain, ytrain, alpha, b, [1, 1], [1], [1]);
+%     [alpha, b] = CMTF_STM(Xtrain, ytrain, 10, [1, 1], [1], [1], 'QP');
+%     ypredict = CMTF_STM_Predict(Xtest, Xtrain, ytrain, alpha, b, [1, 1], [1], [1]);
+   [alpha, b] = ACMTF_STM(Xtrain, ytrain, 10, [1, 1], [1], [1], 'QP');
+   ypredict = ACMTF_STM_Predict(Xtest, Xtrain, ytrain, alpha, b, [1, 1], [1], [1]);
     perf = classperf((ytest == 1), (ypredict == 1));
     accuracy(end + 1) = perf.CorrectRate;
     precision(end + 1) = perf.PositivePredictiveValue;
@@ -72,6 +76,6 @@ for i = 1 : 50
 end
 
 K = table(accuracy', precision', recall', specificity');
-writetable(K, sprintf('Result_Noise_%d_CMTF.csv', t));
+writetable(K, sprintf('Result_Noise_%d_ACMTF.csv', t));
 end
 % 
