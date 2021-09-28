@@ -1,4 +1,4 @@
-function [Zhat, out]=extract_w_CMTF(I1, I2, R, varargin)
+function [Zhat, out, G0]=extract_w_CMTF(I1, I2, R, varargin)
 %EXTRACT_W_CMTF 
 %
 
@@ -35,6 +35,6 @@ options.TraceFunc    = true;
 
 init = 'random';
 % fit CMTF-OPT
-[Zhat,~,out] = cmtf_opt(Z,R,'init',init,'alg_options',options); 
+[Zhat,G0,out] = cmtf_opt(Z,R,'init',init,'alg_options',options); 
 
 end

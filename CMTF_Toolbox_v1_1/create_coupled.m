@@ -74,6 +74,7 @@ P  = length(modes);
 X  = cell(P,1);
 for p = 1:P
     X{p} = full(ktensor(lambdas{p}',A(modes{p})));
-    N    = tensor(randn(size(X{p})));
-    X{p} = X{p} + nlevel*norm(X{p})*N/norm(N);
+    temp = X{p}(:);
+    temp = awgn(double(temp), nlevel, 'measured');
+    X{p} = tensor(reshape(temp, sz(modes{p})));
 end

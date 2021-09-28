@@ -1,11 +1,11 @@
-function [Zhat, out]=extract_w_ACMTF(I1, I2, R, varargin)
+function [Zhat, out, G0]=extract_w_ACMTF(I1, I2, R, varargin)
 %EXTRACT_W_ACMTF 
 %
 
 %% Parse inputs
 params = inputParser;
-params.addParameter('beta_cp', 1e-2, @(x) x >= 0);
-params.addParameter('beta_pca', 1e-2, @(x) x >= 0);
+params.addParameter('beta_cp', 1e-3, @(x) x >= 0);
+params.addParameter('beta_pca', 1e-3, @(x) x >= 0);
 params.addParameter('modes', {[1,2,3], [4,3]},@(x) iscell(x));
 params.parse(varargin{:});
 
@@ -40,6 +40,6 @@ options.TraceFunc    = true;
 
 init = 'random';
 % fit ACMTF-OPT
-[Zhat,~,out] = acmtf_opt(Z,R,'init',init,'alg_options',options, 'beta_cp', beta_cp, 'beta_pca', beta_pca); 
+[Zhat,G0,out] = acmtf_opt(Z,R,'init',init,'alg_options',options, 'beta_cp', beta_cp, 'beta_pca', beta_pca); 
 
 end

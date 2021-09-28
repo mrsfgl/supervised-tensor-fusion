@@ -1,4 +1,4 @@
-function [P, G, output] = cmtf_opt(Z,R,varargin)
+function [A, G, output] = cmtf_opt(Z,R,varargin)
 % CMTF_OPT Fits a coupled matrix and tensor factorization (CMTF) model using 
 % first-order optimization.
 %
@@ -114,7 +114,10 @@ end
 out = feval(fhandle, @(x)cmtf_fun(x,Z,Znormsqr), tt_fac_to_vec(G), options);
 
 %% Compute factors and model fit
-P = ktensor(cmtf_vec_to_fac(out.X, Z));
+Facs = cmtf_vec_to_fac(out.X, Z);
+for p=1:P
+    A{p} = ktensor(Facs(Z.modes{p}));
+end
 if nargout > 2
     output.ExitFlag  = out.ExitFlag;
     normsqr=0;

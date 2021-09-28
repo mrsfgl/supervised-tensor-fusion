@@ -4,11 +4,13 @@ function [err, corrs] = err_analysis_acmtf(data, modes, flag_soft)
 P = length(data.Xorig);
 Facs = cell(1,length(unique(cell2mat(modes))));
 Zhat = data.Zhat;
+fms = zeros(1,P);
 for p=1:P
     for i=1:length(modes{p})
         Facs{modes{p}(i)} = data.Zhat{p}{i};
     end
     Zhat{p} = full(Zhat{p});
+    fms(p) = score(ktensor(Facs(modes{p})), ktensor(data.Atrue(modes{p})));
 end
 TrueFacs = data.Atrue;
 modes = cell2mat(modes);

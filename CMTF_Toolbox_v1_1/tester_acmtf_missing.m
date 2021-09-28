@@ -75,7 +75,7 @@ params.addParameter('beta_pca', .001, @(x) x >= 0);
 params.addParameter('modes', {[1 2 3], [1 4]}, @iscell);
 params.addParameter('lambdas', {[1 1 1], [1 1 1]}, @iscell);
 params.addParameter('M',[0.5 0.5], @isnumeric);
-params.addParameter('noise',.1, @(x) x>=0 && x<=1);
+params.addParameter('noise',.1, @isnumeric);
 params.addParameter('flag_sparse',[0 0], @isnumeric);
 params.addParameter('flag_soft',0, @isnumeric);
 params.addParameter('dist_coupled', 0.1, @(x) x >= 0);
@@ -132,6 +132,7 @@ else
 end
 
 P = length(X);
+Xorig = cell(1,P);
 for p=1:P        
     W{p}  = tt_create_missing_data_pattern(sz(modes{p}), M(p), flag_sparse(p));
     if flag_sparse(p)
@@ -142,6 +143,7 @@ for p=1:P
     norms(p)    = norm(Z.object{p});
     Z.object{p} = Z.object{p}/norms(p); 
     Z.miss{p}   = W{p};
+    Xorig{p}    = full(ktensor(lambdas{p}',Atrue(modes{p})));
 end
 Z.modes = modes;
 Z.size  = sz;
@@ -151,14 +153,15 @@ options = ncg('defaults');
 options.Display ='off';
 options.MaxFuncEvals = 100000;
 options.MaxIters     = 500;
-options.StopTol      = 1e-6;
-options.RelFuncTol   = 1e-6;
+options.StopTol      = 1e-7;
+options.RelFuncTol   = 1e-7;
 
 % fit ACMTF-OPT
 [Zhat,Init,out] = acmtf_opt(Z,R,'init',init,'alg_options',options, 'beta_cp', beta_cp, 'beta_pca', beta_pca);        
 data.Zhat  = Zhat;
 data.W     = W;
-data.Xorig = X;
+data.X     = X;
+data.Xorig = Xorig;
 data.Init  = Init;
 data.out   = out;
 data.Atrue = Atrue;

@@ -8,7 +8,7 @@ function  [X, A] = create_coupled_supervised_modified(varargin)
 params = inputParser;
 params.addParameter('size', [50 30 40 20], @isnumeric);
 params.addParameter('modes', {[1 2 3], [1 4]}, @iscell);
-params.addParameter('noise', 0.1, @(x) x > 0);
+params.addParameter('noise', 10, @isnumeric);
 params.addParameter('n_samples', 30, @isnumeric);
 params.addParameter('class_distance', 1, @isnumeric);
 params.addParameter('class_var', .01, @isnumeric);

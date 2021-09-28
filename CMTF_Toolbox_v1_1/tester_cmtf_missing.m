@@ -67,7 +67,7 @@ params.addParameter('flag_soft',0, @isnumeric);
 params.addParameter('dist_coupled', 0.1, @(x) x >= 0);
 params.addParameter('rnd_seed', randi(10^3));
 params.addParameter('M',[0.5 0.5], @isnumeric);
-params.addParameter('noise',.1, @(x) x>=0 && x<=1);
+params.addParameter('noise',.1, @isnumeric);
 params.addParameter('init', 'random', @(x) (iscell(x) || ismember(x,{'random','nvecs'})));
 params.parse(varargin{:});
 
@@ -131,6 +131,7 @@ for p=1:P
     norms(p)    = norm(Z.object{p});
     Z.object{p} = Z.object{p}/norm(Z.object{p});    
     Z.miss{p}   = W{p};
+    Xorig{p}    = full(ktensor(lambdas{p}',Atrue(modes{p})));
 end
 Z.modes = modes;
 Z.size  = sz;
@@ -144,10 +145,13 @@ options.StopTol      = 1e-6;
 options.RelFuncTol   = 1e-6;
 
 % fit CMTF-OPT
-[Fac, G,out]  = cmtf_opt(Z,R,'init',init,'alg_options',options); 
-data.Fac      = Fac.U;
+[Fac, G, out] = cmtf_opt(Z,R,'init',init,'alg_options',options); 
+for p=1:P
+    data.Fac(modes{p}) = Fac{p}.U;
+end
 data.W        = W;
-data.Xorig    = X;
+data.X        = X;
+data.Xorig    = Xorig;
 data.Init     = G; 
 data.out      = out.OptOut;
 data.Factrue  = Atrue;

@@ -3,19 +3,19 @@
 % Visual EEG and fMRI data
 
 % fMRI data are contrast coefficients
-clear; clc;
-
-addpath("D:\Research\EEG-fMRI\EEG_fMRI_Code\poblano_toolbox-main");
-addpath("D:\Research\EEG-fMRI\EEG_fMRI_Code\CMTF_Toolbox_v1_1");
-addpath("D:\Research\EEG-fMRI\EEG_fMRI_Code\Simulation Study\CoupledSTM");
-addpath("D:\Research\EEG-fMRI\EEG_fMRI_Code\CoupledDecomposition");
-addpath("D:\Research\EEG-fMRI\EEG_fMRI_Code\Tensorlabs");
-addpath("D:\Research\EEG-fMRI\EEG_fMRI_Code\tensor_toolbox-master")
+% clear; clc;
+% 
+% addpath("D:\Research\EEG-fMRI\EEG_fMRI_Code\poblano_toolbox-main");
+% addpath("D:\Research\EEG-fMRI\EEG_fMRI_Code\CMTF_Toolbox_v1_1");
+% addpath("D:\Research\EEG-fMRI\EEG_fMRI_Code\Simulation Study\CoupledSTM");
+% addpath("D:\Research\EEG-fMRI\EEG_fMRI_Code\CoupledDecomposition");
+% addpath("D:\Research\EEG-fMRI\EEG_fMRI_Code\Tensorlabs");
+% addpath("D:\Research\EEG-fMRI\EEG_fMRI_Code\tensor_toolbox-master")
 
 %% load data
-for t = 1 : 5
+for t = 1 : n_exps
 
-load(sprintf('Simulation_Noise_%d.mat', t));
+% load(sprintf('Simulation_Noise_%d.mat', t));
 
 
 % load(sprintf('New_noNoise_%d.mat', t));
@@ -30,10 +30,10 @@ for i = 1 : n
    fMRI = X{1}{i}{2};
 %    [g, ~] = extract_w_CMTF(eeg, fMRI, 3);
    [g, ~] = extract_w_ACMTF(eeg, fMRI, 3);
-   D_data{i} = g;
-%     df = double(X{1}{i}{2});
+%    D_data{i} = g;
+%     df = double(X{1}{i}{1});
 %     g = cpd(df, 3);
-%     D_data{i} = g;
+    D_data{i} = g;
 end
 
 
@@ -42,12 +42,11 @@ for j = 1 : n
    fMRI = X{2}{j}{2};
 %    [g, ~] = extract_w_CMTF(eeg, fMRI, 3);
    [g, ~] = extract_w_ACMTF(eeg, fMRI, 3);
-   D_data{j + n} = g;
-%     df = double(X{2}{j}{2});
+%    D_data{j + n} = g;
+%     df = double(X{2}{j}{1});
 %     g = cpd(df, 3);
-%     D_data{j + n} = g;
+    D_data{j + n} = g;
 end
-
 
 
 %% perform Coupled Decomposition for test data
@@ -58,8 +57,8 @@ precision = [];
 recall = [];
 specificity = [];
 
-for i = 1 : 50
-    s = cvpartition(ones(size(y)), 'HoldOut', 0.2);
+for i = 1 : K
+    s = cvpartition(ones(size(y)), 'HoldOut', 1/K);
     Xtrain = D_data(s.training);
     Xtest = D_data(s.test);
     ytrain = y(s.training);
@@ -68,6 +67,8 @@ for i = 1 : 50
 %     ypredict = CMTF_STM_Predict(Xtest, Xtrain, ytrain, alpha, b, [1, 1], [1], [1]);
    [alpha, b] = ACMTF_STM(Xtrain, ytrain, 10, [1, 1], [1], [1], 'QP');
    ypredict = ACMTF_STM_Predict(Xtest, Xtrain, ytrain, alpha, b, [1, 1], [1], [1]);
+%    [alpha, b] = CP_STM(Xtrain, ytrain, 10, [1,1,1], 'QP');
+%    ypredict = CP_STM_Predict(Xtest, Xtrain, ytrain, alpha, b, [1, 1, 1]);
     perf = classperf((ytest == 1), (ypredict == 1));
     accuracy(end + 1) = perf.CorrectRate;
     precision(end + 1) = perf.PositivePredictiveValue;

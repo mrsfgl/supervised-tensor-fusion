@@ -38,7 +38,7 @@ function  [X, A] = create_coupled_supervised(varargin)
 params = inputParser;
 params.addParameter('size', [50 30 40 20], @isnumeric);
 params.addParameter('modes', {[1 2 3], [1 4]}, @iscell);
-params.addParameter('noise', 0.1, @(x) x > 0);
+params.addParameter('noise', 0.1, @isnumeric);
 params.addParameter('n_samples', 30, @isnumeric);
 params.addParameter('class_distance', 1, @isnumeric);
 params.addParameter('class_var', .01, @isnumeric);
@@ -91,6 +91,25 @@ for m = 1:n_samples
         end
     end
 end
+%% Peide's factor generation.
+% % Generate factor matrices
+% nb_modes  = length(sz);
+% Rtotal    = length(lambdas{1});
+% A         = cell(2,1);
+% % generate factor matrices
+
+
+for m = 1:n_samples
+    for n = 1:nb_modes
+        A{1}{m}{n} =  ones(sz(n), Rtotal) + randn(sz(n), Rtotal) + class_var*randn(sz(n), Rtotal);
+        A{2}{m}{n} =  ones(sz(n), Rtotal) + randn(sz(n), Rtotal) + class_dist(n) + class_var*randn(sz(n), Rtotal);
+        for r=1:Rtotal
+            A{1}{m}{n}(:,r) = A{1}{m}{n}(:,r)/norm(A{1}{m}{n}(:,r));
+            A{2}{m}{n}(:,r) = A{2}{m}{n}(:,r)/norm(A{2}{m}{n}(:,r));
+        end
+    end
+end
+
 
 %% Generate data blocks
 P  = length(modes);

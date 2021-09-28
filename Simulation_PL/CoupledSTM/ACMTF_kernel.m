@@ -26,6 +26,8 @@ function val = ACMTF_kernel(Tx1, Tx2, gammaU, gammaC, gammaV)
         T2_V = cell(1);
         T2_V{1} = Tx2{2}.U{1};
 
-    val = 0.4 * TensorKernel_RBF(T1_U, T2_U, gammaU) + 0.2 * TensorKernel_RBF(T1_C, T2_C, gammaC) + 0.4  * TensorKernel_RBF(T1_V, T2_V, gammaV);
+    val = 0.4 * TensorKernel_RBF(T1_U, T2_U, gammaU) +...
+        0.2 * TensorKernel_RBF(T1_C, T2_C, gammaC) +...
+        0.4  * TensorKernel_RBF(T1_V, T2_V, gammaV);
 
 end
