@@ -7,11 +7,13 @@ params = inputParser;
 params.addParameter('beta_cp', 1e-3, @(x) x >= 0);
 params.addParameter('beta_pca', 1e-3, @(x) x >= 0);
 params.addParameter('modes', {[1,2,3], [4,3]},@(x) iscell(x));
+params.addParameter('alg_options', ncg('defaults'));
 params.parse(varargin{:});
 
 beta_cp = params.Results.beta_cp;
 beta_pca = params.Results.beta_pca;
 modes = params.Results.modes;
+options = params.Results.alg_options;
 
 if isstruct(I1) && isempty(I2)
     Z = I1;
@@ -29,17 +31,9 @@ else
     Z.size(modes) = sizes;
 end
 
-%% Fit ACMTF using one of the first-order optimization algorithms 
-options = ncg('defaults');
-options.Display ='off';
-options.MaxFuncEvals = 100000;
-options.MaxIters     = 500;
-options.StopTol      = 1e-7;
-options.RelFuncTol   = 1e-7;
-options.TraceFunc    = true;
 
 init = 'random';
-% fit ACMTF-OPT
+%% Fit ACMTF using one of the first-order optimization algorithms 
 [Zhat,G0,out] = acmtf_opt(Z,R,'init',init,'alg_options',options, 'beta_cp', beta_cp, 'beta_pca', beta_pca); 
 
 end

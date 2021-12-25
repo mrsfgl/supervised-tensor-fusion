@@ -4,9 +4,11 @@ function [Zhat, out, G0]=extract_w_CMTF(I1, I2, R, varargin)
 
 params = inputParser;
 params.addParameter('modes', {[1,2,3], [4,3]},@(x) iscell(x));
+params.addParameter('alg_options', ncg('defaults'));
 params.parse(varargin{:});
 
 modes = params.Results.modes;
+options = params.Results.alg_options;
 
 if isstruct(I1) && isempty(I2)
     Z = I1;
@@ -24,17 +26,8 @@ else
     Z.size(modes) = sizes;
 end
 
-%% Fit CMTF using one of the first-order optimization algorithms 
-options = ncg('defaults');
-options.Display ='off';
-options.MaxFuncEvals = 100000;
-options.MaxIters     = 500;
-options.StopTol      = 1e-7;
-options.RelFuncTol   = 1e-7;
-options.TraceFunc    = true;
-
 init = 'random';
-% fit CMTF-OPT
+%% Fit CMTF using one of the first-order optimization algorithms 
 [Zhat,G0,out] = cmtf_opt(Z,R,'init',init,'alg_options',options); 
 
 end

@@ -23,7 +23,8 @@ else
     ub = [];
 end
     
-alpha = quadprog(H, f, A, b, Aeq, beq, [], ub);
+opts = optimoptions(@quadprog,'MaxIterations',200,'OptimalityTolerance',10^-4,'Display','none');
+alpha = quadprog(H, f, A, b, Aeq, beq, [], ub, [], opts);
 sv_idx = [];
 for i = 1 : n
     if alpha(i) > 1.0e-5

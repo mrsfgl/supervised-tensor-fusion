@@ -27,18 +27,18 @@ function [oddball, standard] = trial_sep_eeg_fMRI(I, tsv_name, num_trials, varar
 
 % Parse inputs
 param = inputParser;
-% param.addParameter('num_trials', 5, @(x) isinteger(x) && x>=0);
-% param.addParameter('stim_type', 'visual');
-% param.addParameter('path', '/egr/research/sigimprg/Emre/databases/EEG-fMRI/EEG_FMRI');
+param.addParameter('num_trials', 5, @(x) isinteger(x) && x>=0);
+param.addParameter('stim_type', 'visual');
+param.addParameter('path', '/egr/research/sigimprg/Emre/databases/EEG-fMRI/EEG_FMRI');
 param.parse(varargin{:});
 %
-% path = param.Results.path;
-% num_trials = param.Results.num_trials;
-% stim_type = param.Results.stim_type;
+path = param.Results.path;
+num_trials = param.Results.num_trials;
+stim_type = param.Results.stim_type;
 %
 
 sz = size(I);
-% task = tdfread([path,'/Sub00',num2str(i),'/func/sub-0',num2str(i),'_task-',stim_type,'oddballwithbuttonresponsetotargetstimuli_run-0',num2str(j),'_events.tsv']);
+task = tdfread([path,'/Sub00',num2str(i),'/func/sub-0',num2str(i),'_task-',stim_type,'oddballwithbuttonresponsetotargetstimuli_run-0',num2str(j),'_events.tsv']);
 task = tdfread(tsv_name);
 trial_types = unique(task.trial_type,'rows');
 

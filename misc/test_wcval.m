@@ -1,6 +1,6 @@
 function [results] = test_wcval(A, F, w_list, K)
 
-n_samples = length(A{1});
+n_samples = size(F,2)/2;
 n_val = round(n_samples/K);
 n_train = n_samples-n_val;
 
@@ -14,14 +14,20 @@ n_train = n_samples-n_val;
 %     acc(i_cval) = cval_results(i_cval).accuracy;
 % end
 F = F(:,[1:n_train, n_samples+(1:n_train)]);
-A{1} = A{1}(:,1:n_train);
-A{2} = A{2}(:,1:n_train);
+if isempty(A)
+    A{1} = [];
+    A{2} = [];
+else
+    A{1} = A{1}(:,1:n_train);
+    A{2} = A{2}(:,1:n_train);
+end
 % [~,i_wgt] = max(acc);
 % w = w_list(i_wgt, :);
-w = [.2,.2,.2,.4];
+w = [.25,.25,.25,.25];
 
 n_samples = n_train;
 
+rng(123)
 K_folds = crossvalind('Kfold', [ones(1,n_samples),-ones(1,n_samples)],K);
 for i_folds=1:K
     [train_1, test_1] = tr_test_split(K_folds, i_folds, 0, A{1}, F);
@@ -29,7 +35,9 @@ for i_folds=1:K
     train = cat(2,train_1,train_2);
     test = cat(2,test_1,test_2);
     
-    results(i_folds).orig = classify_factors(train(1,:), test(1,:), w);
+    if ~isempty(A{1})
+        results(i_folds).orig = classify_factors(train(1,:), test(1,:), w);
+    end
     results(i_folds).cp = classify_factors(train(2,:), test(2,:), w);
     results(i_folds).pca = classify_factors(train(3,:), test(3,:), w);
     results(i_folds).cmtf = classify_factors(train(4,:), test(4,:), w);
@@ -60,12 +68,14 @@ end
 
 function [train, test] = tr_test_split(K_folds, i_folds, offset, A, F)
 
-n_samples = length(A);
+n_samples = size(F,2)/2;
 l = 1;
 k = 1;
 for i=1:n_samples
     if K_folds(i)==i_folds
-        test{1,k} = ktensor(A{i});
+        if ~isempty(A)
+            test{1,k} = ktensor(A{i});
+        end
         test{2,k} = F{1,i+offset(1)};
         test{3,k} = F{2,i+offset(1)};
         test{4,k} = F{3,i+offset(1)};
@@ -73,7 +83,9 @@ for i=1:n_samples
 %             test_acmtf_sc{k} = Facmtf_sc{i+n_samples};
         k = k+1;
     else
-        train{1,l} = ktensor(A{i});
+        if ~isempty(A)
+            train{1,l} = ktensor(A{i});
+        end
         train{2,l} = F{1,i+offset(1)};
         train{3,l} = F{2,i+offset(1)};
         train{4,l} = F{3,i+offset(1)};

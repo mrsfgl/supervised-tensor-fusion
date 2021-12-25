@@ -39,7 +39,8 @@ else
                 gammaC*TensorKernel_RBF(Tx1.U([3,5]), Tx2.U([3,5]),1)+...
                 gammaV*TensorKernel_RBF(Tx1.U(4), Tx2.U(4),1);
         else
-            val = TensorKernel_RBF(Tx1.U, Tx2.U, [gammaU,gammaC]);
+            val = sum(gammaU)*TensorKernel_RBF(Tx1.U(1:2), Tx2.U(1:2), 1)+...
+                gammaC*TensorKernel_RBF(Tx1.U(3), Tx2.U(3), 1);
         end
     end
 end
