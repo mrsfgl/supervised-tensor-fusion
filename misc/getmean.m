@@ -1,4 +1,7 @@
 function mu_B = getmean(X, beta, rank, p, varargin)
+% mu_B = getmean(X, beta, rank, p)
+% Computes the full tensor B from its rank 1 constituents beta
+% and projects the X to this full tensor.
 
 if isempty(varargin)
     rank_exclude = nan;

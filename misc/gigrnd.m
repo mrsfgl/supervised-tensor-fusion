@@ -22,13 +22,13 @@ if chi < ZTOL
         X = 2*randg(lambda)/psi;
     else
         % GIG or Inverse Gamma through rescaling
-        X = gigrnd3(lambda,psi*chi,1)*chi;
+        X = gigrnd(lambda,psi*chi,1)*chi;
     end
 elseif psi < ZTOL
     %% Special cases which are basically Gamma and Inverse Gamma distribution
     if lambda > 0
         % GIG or Gamma through rescaling
-        X = gigrnd3(lambda,1,psi*chi)/psi;
+        X = gigrnd(lambda,1,psi*chi)/psi;
     else
         % Inverse Gamma
         X = 0.5*chi/randg(-lambda);

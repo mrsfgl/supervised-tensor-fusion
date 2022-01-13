@@ -1,10 +1,13 @@
-function out = bater(z_train, x_train, y_train, nsweep, rank) 
+function out = bater_multimodal_concat(z_train, x_train, y_train, nsweep, rank) 
 %%
 %
 
 n = length(y_train);
-d = ndims(x_train)-1;
-p = size(x_train, 2:d+1);
+M = length(x_train);
+for m=1:M
+    d(m) = ndims(x_train{m})-1;
+    p{m} = size(x_train{m}, 2:d(m)+1);
+end
 len_alpha = 10;
 pgamma = size(z_train, 2); %ztrain\in R^{n x pgamma}
 
@@ -13,21 +16,28 @@ my = mean(y_train,1);
 sy = std(y_train,[],1);
 obs = (y_train-my)/sy;
 
-sx = max(x_train,[],1)-min(x_train,[],1);
-sx(sx==0) = 1;
-Xt = (x_train-repmat(mean(x_train,1),[n,ones(1,d)]))./repmat(sx,[n,ones(1,d)]);
-
+Xt = cell(1,M);
+for m=1:M
+    sx = std(x_train{m});
+    sx(sx==0) = 1;
+    Xt{m} = (x_train{m}-repmat(mean(x_train{m},1),[n,...
+        ones(1,d(m))]))/diag(sx);
+end
 %% MCMC Setup
 ZZ = z_train'*z_train;
 
 %% Initialize 
 % Hyperparameters
 a_lam = repmat(3, 1, rank);
-b_lam = a_lam.^(1/(2*d));
+b_lam = cell(M,1);
+for m = 1:M
+    b_lam{m} = a_lam.^(1/(2*d(m)));
+end
 phi_alpha = repmat(1/rank, 1, rank);
 
-a_vphi = sum(phi_alpha);
-b_vphi = phi_alpha(1)*rank^(1/4);
+for m = 1:M
+    b_vphi{m} = phi_alpha(1)*rank^(1/4);
+end
 
 c0 = 0;
 s0 = 1;
@@ -35,19 +45,30 @@ a_t = 2.5/2;
 b_t = 2.5/2 * s0^2;
 tau2 = 1 / gamrnd(a_t, 1./b_t, 1); % initialize tau2
 
-lambda = gamrnd(a_lam(1), 1./b_lam(1), rank, d); % initialize lambda with size rank x d
-omega = cell(d,1);
-for m = 1:d
-    omega{m} = exprnd(0.5*(a_lam(1)/b_lam(1)), rank, p(m));% initialize omega
+lambda = cell(M,1);
+omega = cell(M,1);
+for m = 1:M
+    lambda{m} = gamrnd(a_lam(1), 1./b_lam{m}(1), rank, d(m)); % initialize lambda with size rank x d(m)
 end
-beta = cell(rank,d);
-for r = 1:rank
-    for j = 1:d
-        beta{r, j} = randn(p(j),1); % initialize beta
+for m = 1:M
+    omega{m} = cell(d(m),1);
+    for j = 1:d(m)
+        omega{m}{j} = exprnd(0.5*(a_lam(1)/b_lam{m}(1)), rank, p{m}(j));% initialize omega
     end
 end
-
-alpha_grid = linspace(rank^(-d), rank^(-0.1), len_alpha);  % grid of alpha values
+beta = cell(M,1);
+for m = 1:M
+    beta{m} = cell(rank,d(m));
+    for j = 1:d(m)
+        for r = 1:rank
+            beta{m}{r,j} = randn(p{m}(j),1); % initialize beta
+        end
+    end
+end
+alpha_grid = cell(M,1);
+for m=1:M
+    alpha_grid{m} = linspace(rank^(-d(m)), rank^(-0.1), len_alpha);  % grid of alpha values
+end
 
 %% MCMC run 
 tt = tic;
@@ -62,86 +83,75 @@ omega_store = cell(nsweep,1);
 lambda_store = cell(nsweep,1);
 hyppar_store = cell(nsweep,1);
 score_store = cell(nsweep,1);
-
+tens_mean = cell(M,1);
 for sweep = 1:nsweep
-    tens_mean = getmean(Xt, beta, rank, p, []);
-        
-    %% update (a_lam, b_lam)
-%     Cjr = zeros(rank,d);
-%     for i=1:rank
-%         for j=1:d
-%             Cjr(r,d) = sum(abs(beta{r,j}))/sqrt(tau_r(r)); 
-%         end
-%     end
-%     for l = 1:size(par_grid,1)
-%         par.wt(l, :) = sum(mfun(par_grid(l,:))+Cjr,2);
-%     end
-%     par.wt = exp(par.wt-log(sum(exp(par.wt),2)));
-%     ixx = zeros(1,size(par_grid,1));
-%     for k = 1:size(par_grid, 1)
-%         ixx(k) = randsample(size(par_grid, 1), 1, true, par.wt(k,:)); %%%% Ask Sumegha
-%     end
-%     for rr = 1:rank
-%         a_lam(rr) = par_grid(ixx(rr),1);
-%         b_lam(rr) = par_grid(ixx(rr),2) * a_lam(rr);
-%     end
+    pred_rest = zeros(n,1);
+    for m = 1:M
+        tens_mean{m} = getmean(Xt{m}, beta{m}, rank, p{m}, []);
+        pred_rest = pred_rest+tens_mean{m};
+    end
         
     %% update gamma (scalar predictor coefficients)
-    Sig_g = eye(pgamma) + ZZ / tau2;%eye(pgamma)-z_train*z_train'/(tau2+z_train'*z_train);
-    mu_g = Sig_g \ (z_train'*(obs-c0-tens_mean)/tau2);
+    Sig_g = eye(pgamma) + ZZ / tau2; % eye(pgamma)-z_train*z_train'/(tau2+z_train'*z_train);
+    mu_g = Sig_g \ (z_train'*(obs-c0-pred_rest)/tau2);
     gam = mu_g + chol(Sig_g) * randn(pgamma,1);
         
     %% update alpha (intercept) 
     pred_mean = z_train * gam;
-    mu_c0 = mean(obs-pred_mean-tens_mean);
+    mu_c0 = mean(obs-pred_mean-pred_rest);
     c0 = mu_c0 + sqrt(tau2 / n)*randn(1);
         
     %% update tau2 
     a_tau = a_t + n/2;
-    b_tau = b_t + 0.5*norm(obs-pred_mean-tens_mean-c0)^2;
+    b_tau = b_t + 0.5*norm(obs-pred_mean-pred_rest-c0)^2;
     tau2 = 1/gamrnd(a_tau, 1./b_tau, 1);
 
     %% sample astar
-    o = draw_phi_tau(alpha_grid, beta, omega, b_vphi);
-    astar = randsample(alpha_grid, 1, true, o.scores);
-    score_store{sweep} = o.scores;
+    for m = 1:M
+        o = draw_phi_tau(alpha_grid{m}, beta{m}, omega{m}, b_vphi{m});
+        astar{m} = randsample(alpha_grid{m}, 1, true, o.scores);
+        score_store{sweep}{m} = o.scores;
+    end
         
     %% sample (phi, varphi)
-    o = draw_phi_tau(astar, beta, omega, b_vphi);
-    phi_val = o.phi; 
-    varphi_val = o.varphi;
-    tau_r = varphi_val * phi_val;
-    phi_alpha = repmat(astar, rank,1); 
-    phi_a0 = sum(phi_alpha); 
-    a_vphi = phi_a0;
+    for m = 1:M
+        o = draw_phi_tau(astar{m}, beta{m}, omega{m}, b_vphi{m});
+        phi_val{m} = o.phi; 
+        varphi_val{m} = o.varphi;
+        tau_r{m} = varphi_val{m} * phi_val{m};
+        a_vphi{m} = sum(repmat(astar{m}, rank,1)); 
+    end
                 
     %% update rank specific params
-    for r = 1:rank
-        for j = 1:d
-            tens_mu_r = getmean(Xt, beta, rank, p, r);
-
-            betj = getouter(beta(r,:), j);
-            H = reshape(t2m(Xt,[1,j+1])*betj,[n,p(j)]); %NxI_d
-            K = H'*H./tau2 + diag(1./(tau_r(r)*omega{j}(r,:)));  % I_dxI_d
-
-            % update betas
-            mm = (obs-c0-pred_mean-tens_mu_r);
-            bet_mu_jr = K\((H'/tau2)*mm);
-            beta{r,j} = bet_mu_jr+chol(inv(K))*randn(p(j),1);
-
-            % update lambda.jr
-            lambda(r,j) = gamrnd(a_lam(r)+p(j), ...
-                (b_lam(r)+sum(abs(beta{r,j}))/sqrt(tau_r(r)))^-1, 1);
-
-            % update omega.jr
-            for k = 1:p(j)
-                omega{j}(r,k) = gigrnd(1/2, lambda(r,j)^2, beta{r,j}(k)^2/tau_r(r));
-            end
-            %omega[r,j,] = sapply(1:p, function(kk){a = lambda[r,j]^2; b = beta[[r]][kk,j]^2 / tau_r[r]; map = besselK(sqrt(a*b),0.5 + 1) / besselK(sqrt(a*b), 0.5) * sqrt(b / a); return(map)})
-        
-
-        beta_store{sweep} = beta;
+    for m = 1:M
+        pred_rest = zeros(n,1);
+        idx = setdiff(1:M,m);
+        for m_n = idx
+            pred_rest = pred_rest + getmean(Xt{m_n}, beta{m_n},rank,p{m_n});
         end
+        for r = 1:rank
+            tens_mu_r = getmean(Xt{m}, beta{m}, rank, p{m}, r);
+            for j = 1:d(m)
+                betj = getouter(beta{m}(r,:), j);
+                H = reshape(t2m(Xt{m},[1,j+1])*betj,[n,p{m}(j)]); %NxI_d
+                K = H'*H./tau2 + diag(1./(tau_r{m}(r)*omega{m}{j}(r,:)));  % I_dxI_d
+
+                % update betas
+                mm = (obs-c0-pred_mean-pred_rest-tens_mu_r);
+                bet_mu_jr = K\((H'/tau2)*mm);
+                beta{m}{r,j} = bet_mu_jr+chol(inv(K))*randn(p{m}(j),1);
+
+                % update lambda.jr
+                lambda{m}(r,j) = gamrnd(a_lam(r)+p{m}(j), ...
+                    (b_lam{m}(r)+sum(abs(beta{m}{r,j}))/sqrt(tau_r{m}(r)))^-1, 1);
+
+                % update omega.jr
+                for k = 1:p{m}(j)
+                    omega{m}{j}(r,k) = gigrnd(1/2, lambda{m}(r,j)^2, beta{m}{r,j}(k)^2/tau_r{m}(r));
+                end
+            end
+        end
+        beta_store{sweep}{m} = beta{m};
     end
         
     %% store params
@@ -160,9 +170,7 @@ end
     disp(['Time out: ', num2str(tt)])
             
     %% finalize ####    
-    out = struct('nsweep', nsweep, 'rank',  rank, 'p',  p, 'd',  d, ...
-        'alpha_grid',  alpha_grid, 'my',  my, 'sy',  sy, ...
-        'Xt',  Xt, 'obs',  obs, 'a_t',  a_t, 'b_t',  b_t, 'tau2_store',  tau2_store,...
+    out = struct('nsweep', nsweep, 'obs',  obs, 'a_t',  a_t, 'b_t',  b_t, 'tau2_store',  tau2_store,...
         'c0_store', c0_store, 'gam_store', gam_store, ...
         'alpha_store', alpha_store, 'beta_store', beta_store, ...
         'phi_store', phi_store, 'varphi_store', varphi_store,...
@@ -208,8 +216,8 @@ if(len_alpha > 1)
     % get reference set
     for jj = 1:len_alpha  
         m.phialpha = repmat(alpha(jj), rank,1);
-        m.phia0 = sum(m.phialpha);
-        m.avphi = m.phia0;
+%         m.phia0 = sum(m.phialpha);
+        m_avphi = alpha(jj)*rank; %m.phia0;
 
         % draw phi
         Cr1 = sum(Cr,2);
@@ -223,7 +231,7 @@ if(len_alpha > 1)
         % draw varphi ##colSums(Cr / t(replicate(d, z)))
         Cr2 = (Cr1./phi.a)';
         for j=1:M
-            varphi.a(j) = gigrnd(m.avphi-rank*sum(p)/2, 2*b_vphi, sum(Cr2(j,:)));
+            varphi.a(j) = gigrnd(m_avphi-rank*sum(p)/2, 2*b_vphi, sum(Cr2(j,:)));
         end
         phi_val((jj-1)*M+1:jj*M, :) = phi.a';
         varphi_val((jj-1)*M+1:jj*M) = varphi.a;
@@ -245,7 +253,7 @@ else
 
     % draw varphi
     Cr2 = Cr1 ./ phi_val';
-    varphi_val = gigrnd(m.avphi-rank*sum(p)/2, 2*b_vphi, sum(Cr2));
+    varphi_val = gigrnd(m_avphi-rank*sum(p)/2, 2*b_vphi, sum(Cr2));
     scores = NaN;
 end
 out.phi = phi_val; 

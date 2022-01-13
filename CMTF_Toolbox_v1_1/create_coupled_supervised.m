@@ -47,16 +47,16 @@ params.addParameter('M',[0 0], @isnumeric);
 params.addParameter('lambdas', {[1 1 1], [1 1 1]}, @iscell);
 params.addParameter('rnd_seed', randi(10^3));
 params.parse(varargin{:});
-sz         = params.Results.size;    %size of data sets
-lambdas    = params.Results.lambdas; % norms of components in each data set
-modes      = params.Results.modes;   % how the data sets are coupled
-nlevel     = params.Results.noise;
-n_samples  = params.Results.n_samples;
+sz          = params.Results.size;    % size of data sets
+lambdas     = params.Results.lambdas; % norms of components in each data set
+modes       = params.Results.modes;   % how the data sets are coupled
+nlevel      = params.Results.noise;
+n_samples   = params.Results.n_samples;
 flag_sparse = params.Results.flag_sparse;
 M           = params.Results.M;
-class_dist = params.Results.class_distance;
-class_var  = params.Results.class_var;
-rnd_seed   = params.Results.rnd_seed;
+class_dist  = params.Results.class_distance;
+class_var   = params.Results.class_var;
+rnd_seed    = params.Results.rnd_seed;
 
 
 max_modeid = max(cellfun(@(x) max(x), modes));
@@ -81,16 +81,16 @@ for n = 1:nb_modes
     T2{n} = randn(sz(n),Rtotal);
 end
 
-for m = 1:n_samples
-    for n = 1:nb_modes
-        A{1}{m}{n} = temp{n} + class_dist(n)*T1{n} + class_var*randn(sz(n), Rtotal);
-        A{2}{m}{n} = temp{n} + class_dist(n)*T2{n} + class_var*randn(sz(n), Rtotal);
-        for r=1:Rtotal
-            A{1}{m}{n}(:,r) = A{1}{m}{n}(:,r)/norm(A{1}{m}{n}(:,r));
-            A{2}{m}{n}(:,r) = A{2}{m}{n}(:,r)/norm(A{2}{m}{n}(:,r));
-        end
-    end
-end
+% for m = 1:n_samples
+%     for n = 1:nb_modes
+%         A{1}{m}{n} = temp{n} + class_dist(n)*T1{n} + class_var*randn(sz(n), Rtotal);
+%         A{2}{m}{n} = temp{n} + class_dist(n)*T2{n} + class_var*randn(sz(n), Rtotal);
+%         for r=1:Rtotal
+%             A{1}{m}{n}(:,r) = A{1}{m}{n}(:,r)/norm(A{1}{m}{n}(:,r));
+%             A{2}{m}{n}(:,r) = A{2}{m}{n}(:,r)/norm(A{2}{m}{n}(:,r));
+%         end
+%     end
+% end
 %% Peide's factor generation.
 % % Generate factor matrices
 % nb_modes  = length(sz);
